@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Gestor de tareas con JavaScript puro aplicando programación orientada a objetos: clases, encapsulamiento, herencia y persistencia con localStorage.">
+  <meta name="description" content="Gestor de tareas completo con JavaScript puro aplicando programación orientada a objetos: clases, herencia, categorías, edición, búsqueda, filtros, ordenamiento, persistencia con localStorage y temas claro/oscuro.">
   <title>Gestor de Tareas · POO</title>
 
   <!-- Tipografías -->
@@ -13,16 +13,58 @@
 
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-theme="dark">
 
   <div class="app">
     <header class="app-header">
-      <span class="logo">&lt;Gestor /&gt;</span>
+      <div class="header-top">
+        <span class="logo">&lt;Gestor /&gt;</span>
+        <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+          <span class="theme-ico sun" aria-hidden="true">☀️</span>
+          <span class="theme-ico moon" aria-hidden="true">🌙</span>
+        </button>
+      </div>
       <h1>Gestor de Tareas</h1>
       <p class="subtitle">Programación orientada a objetos en JavaScript puro</p>
     </header>
 
+    <!-- Estadísticas -->
+    <section class="stats" aria-label="Estadísticas">
+      <div class="stat-card">
+        <span class="stat-label">Total</span>
+        <span class="stat-value" id="statTotal">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Pendientes</span>
+        <span class="stat-value" id="statPendientes">0</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Completadas</span>
+        <span class="stat-value" id="statCompletadas">0</span>
+      </div>
+      <div class="stat-card vencidas">
+        <span class="stat-label">Vencidas</span>
+        <span class="stat-value" id="statVencidas">0</span>
+      </div>
+      <div class="stat-card alta">
+        <span class="stat-label">Prioridad alta</span>
+        <span class="stat-value" id="statAlta">0</span>
+      </div>
+    </section>
+
+    <!-- Progreso -->
+    <section class="progress-card" aria-label="Progreso general">
+      <div class="progress-head">
+        <span class="progress-title">Progreso general</span>
+        <span class="progress-pct" id="progressPct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </section>
+
     <section class="card form-card">
+      <h2 class="form-title" id="formTitle">Nueva tarea</h2>
       <form id="taskForm" novalidate>
         <div class="field field-title">
           <label for="task-title">Título</label>
@@ -34,39 +76,139 @@
           <div class="field">
             <label for="task-priority">Prioridad</label>
             <select id="task-priority" name="priority">
-              <option value="alta">Alta</option>
-              <option value="media" selected>Media</option>
-              <option value="baja">Baja</option>
+              <option value="alta">🔴 Alta</option>
+              <option value="media" selected>🟡 Media</option>
+              <option value="baja">🟢 Baja</option>
             </select>
           </div>
           <div class="field">
-            <label for="task-date">Fecha límite</label>
-            <input type="date" id="task-date" name="date">
+            <label for="task-category">Categoría</label>
+            <select id="task-category" name="category">
+              <option value="trabajo">Trabajo</option>
+              <option value="estudio" selected>Estudio</option>
+              <option value="personal">Personal</option>
+              <option value="otros">Otros</option>
+            </select>
           </div>
         </div>
 
-        <button type="submit" class="btn btn-primary">Agregar tarea</button>
+        <div class="field">
+          <label for="task-date">Fecha límite</label>
+          <input type="date" id="task-date" name="date">
+          <span class="error" data-error-for="date"></span>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="submitBtn">Agregar tarea</button>
+          <button type="button" class="btn btn-ghost hidden" id="cancelEditBtn">Cancelar edición</button>
+        </div>
       </form>
     </section>
 
     <section class="card list-card">
       <div class="list-toolbar">
-        <span class="pending-count">Pendientes: <strong id="pendingCount">0</strong></span>
-        <div class="filters" role="group" aria-label="Filtrar tareas">
-          <button class="filter-btn active" data-filter="todas">Todas</button>
-          <button class="filter-btn" data-filter="pendientes">Pendientes</button>
-          <button class="filter-btn" data-filter="completadas">Completadas</button>
+        <div class="field search-field">
+          <label class="sr-only" for="task-search">Buscar tareas</label>
+          <input type="search" id="task-search" name="search" placeholder="Buscar por título..." autocomplete="off">
+        </div>
+
+        <div class="toolbar-row">
+          <div class="filters" role="group" aria-label="Filtrar por estado">
+            <button class="filter-btn active" data-filter="todas">Todas</button>
+            <button class="filter-btn" data-filter="pendientes">Pendientes</button>
+            <button class="filter-btn" data-filter="completadas">Completadas</button>
+            <button class="filter-btn" data-filter="vencidas">Vencidas</button>
+          </div>
+        </div>
+
+        <div class="toolbar-row selects-row">
+          <div class="field mini-field">
+            <label class="sr-only" for="filter-category">Categoría</label>
+            <select id="filter-category">
+              <option value="todas">Todas las categorías</option>
+              <option value="trabajo">Trabajo</option>
+              <option value="estudio">Estudio</option>
+              <option value="personal">Personal</option>
+              <option value="otros">Otros</option>
+            </select>
+          </div>
+          <div class="field mini-field">
+            <label class="sr-only" for="sort-options">Ordenar</label>
+            <select id="sort-options">
+              <option value="creacion">Orden de creación</option>
+              <option value="fecha-proxima">Fecha límite más próxima</option>
+              <option value="fecha-lejana">Fecha límite más lejana</option>
+              <option value="prioridad">Prioridad</option>
+              <option value="nombre-az">Nombre A-Z</option>
+              <option value="nombre-za">Nombre Z-A</option>
+            </select>
+          </div>
         </div>
       </div>
 
       <ul class="task-list" id="taskList" aria-live="polite"></ul>
-      <p class="empty-state" id="emptyState">No hay tareas. ¡Agrega una arriba!</p>
+
+      <div class="empty-states">
+        <div class="empty-state active" id="emptyNoTasks">
+          <span class="empty-icon" aria-hidden="true">📋</span>
+          <p class="empty-title">No tienes tareas todavía</p>
+          <p class="empty-sub">Agrega tu primera tarea para comenzar.</p>
+        </div>
+        <div class="empty-state" id="emptyNoResults">
+          <span class="empty-icon" aria-hidden="true">🔍</span>
+          <p class="empty-title">Sin resultados</p>
+          <p class="empty-sub">No hay tareas que coincidan con tu búsqueda o filtros.</p>
+        </div>
+      </div>
     </section>
   </div>
 
   <footer class="app-footer">
     <p>Hecho con JavaScript puro y POO · HTML, CSS y JS</p>
   </footer>
+
+  <!-- Modal de edición -->
+  <div class="modal-overlay" id="editModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+      <button class="modal-close" id="editModalClose" aria-label="Cerrar">×</button>
+      <h2 class="modal-title" id="editModalTitle">Editar tarea</h2>
+      <form id="editForm" novalidate>
+        <div class="field">
+          <label for="edit-title">Título</label>
+          <input type="text" id="edit-title" name="title" autocomplete="off">
+          <span class="error" data-error-for="edit-title"></span>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="edit-priority">Prioridad</label>
+            <select id="edit-priority">
+              <option value="alta">🔴 Alta</option>
+              <option value="media">🟡 Media</option>
+              <option value="baja">🟢 Baja</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="edit-category">Categoría</label>
+            <select id="edit-category">
+              <option value="trabajo">Trabajo</option>
+              <option value="estudio">Estudio</option>
+              <option value="personal">Personal</option>
+              <option value="otros">Otros</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="edit-date">Fecha límite</label>
+          <input type="date" id="edit-date">
+          <span class="error" data-error-for="edit-date"></span>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Guardar cambios</button>
+          <button type="button" class="btn btn-ghost" id="editModalCancel">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="script.js"></script>
 </body>
