@@ -667,6 +667,13 @@ body {
   animation: fadeIn 0.2s ease;
 }
 
+/* El atributo hidden lo anula el display:flex de .modal-overlay;
+   esta regla fuerza el ocultado (mayor especificidad) para que
+   abrir/cerrar el modal funcione en todos los navegadores. */
+.modal-overlay[hidden] {
+  display: none;
+}
+
 .modal {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
