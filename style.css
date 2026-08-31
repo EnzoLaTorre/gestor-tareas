@@ -4,20 +4,32 @@
 
 :root,
 :root[data-theme="dark"] {
-  --bg-primary: #070b14;
-  --bg-secondary: #0c1322;
-  --bg-card: #101828;
-  --bg-input: #0c1322;
-  --text-primary: #eef3fb;
-  --text-secondary: #93a1b8;
-  --border-color: #1e2a45;
-  --border-soft: rgba(56, 189, 248, 0.25);
-  --accent: #38bdf8;
-  --accent-2: #818cf8;
-  --success: #34d399;
-  --danger: #fb7185;
-  --warning: #fbbf24;
-  --shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  --bg-primary: #0d0f1a;
+  --bg-secondary: #161a29;
+  --bg-card: #1c2133;
+  --bg-input: #12141f;
+  --text-primary: #ededf7;
+  --text-secondary: #9d9ac4;
+  --border-color: #2b3152;
+  --border-soft: rgba(139, 92, 246, 0.35);
+  --accent: #8b5cf6;
+  --accent-2: #ec4899;
+  --success: #10b981;
+  --danger: #f43f5e;
+  --warning: #f59e0b;
+  --shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  --focus-ring: rgba(139, 92, 246, 0.22);
+  --btn-shadow: rgba(139, 92, 246, 0.3);
+  --btn-shadow-hover: rgba(139, 92, 246, 0.45);
+  --accent-soft-bg: rgba(139, 92, 246, 0.14);
+  --accent-soft-border: rgba(139, 92, 246, 0.2);
+  --accent-hover-bg: rgba(139, 92, 246, 0.1);
+  --danger-soft-border: rgba(244, 63, 94, 0.5);
+  --danger-soft-bg: rgba(244, 63, 94, 0.08);
+  --danger-pill-border: rgba(244, 63, 94, 0.3);
+  --danger-pill-bg: rgba(244, 63, 94, 0.12);
+  --danger-hover-bg: rgba(244, 63, 94, 0.1);
+  --modal-overlay: rgba(10, 12, 24, 0.75);
 }
 
 :root[data-theme="light"] {
@@ -28,13 +40,25 @@
   --text-primary: #111827;
   --text-secondary: #6b7280;
   --border-color: #e2e8f0;
-  --border-soft: rgba(56, 189, 248, 0.4);
-  --accent: #0ea5e9;
-  --accent-2: #6366f1;
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
+  --border-soft: rgba(139, 92, 246, 0.4);
+  --accent: #7c3aed;
+  --accent-2: #db2777;
+  --success: #059669;
+  --danger: #dc2626;
+  --warning: #d97706;
   --shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+  --focus-ring: rgba(124, 58, 237, 0.2);
+  --btn-shadow: rgba(124, 58, 237, 0.3);
+  --btn-shadow-hover: rgba(124, 58, 237, 0.45);
+  --accent-soft-bg: rgba(124, 58, 237, 0.12);
+  --accent-soft-border: rgba(124, 58, 237, 0.2);
+  --accent-hover-bg: rgba(124, 58, 237, 0.1);
+  --danger-soft-border: rgba(220, 38, 38, 0.4);
+  --danger-soft-bg: rgba(220, 38, 38, 0.06);
+  --danger-pill-border: rgba(220, 38, 38, 0.3);
+  --danger-pill-bg: rgba(220, 38, 38, 0.1);
+  --danger-hover-bg: rgba(220, 38, 38, 0.08);
+  --modal-overlay: rgba(15, 23, 42, 0.5);
 }
 
 * {
@@ -280,7 +304,7 @@ body {
 .field select:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .field input::placeholder {
@@ -328,12 +352,12 @@ body {
 .btn-primary {
   flex: 1;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #071019;
-  box-shadow: 0 8px 24px rgba(56, 189, 248, 0.3);
+  color: #ffffff;
+  box-shadow: 0 8px 24px var(--btn-shadow);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 12px 32px rgba(56, 189, 248, 0.45);
+  box-shadow: 0 12px 32px var(--btn-shadow-hover);
 }
 
 .btn-ghost {
@@ -393,7 +417,7 @@ body {
 }
 
 .filter-btn.active {
-  background: rgba(56, 189, 248, 0.14);
+  background: var(--accent-soft-bg);
   border-color: var(--accent);
   color: var(--accent);
 }
@@ -447,8 +471,8 @@ body {
 }
 
 .task-item.overdue:not(.completed) {
-  border-color: rgba(239, 68, 68, 0.5);
-  background: rgba(239, 68, 68, 0.06);
+  border-color: var(--danger-soft-border);
+  background: var(--danger-soft-bg);
 }
 
 .task-item.removing {
@@ -553,8 +577,8 @@ body {
 .meta-chip .prio-label.baja { color: var(--success); }
 
 .cat-chip {
-  background: rgba(56, 189, 248, 0.12);
-  border: 1px solid rgba(56, 189, 248, 0.18);
+  background: var(--accent-soft-bg);
+  border: 1px solid var(--accent-soft-border);
   color: var(--accent);
   border-radius: 6px;
   padding: 1px 8px;
@@ -564,8 +588,8 @@ body {
 
 .overdue-badge {
   color: var(--danger);
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--danger-pill-bg);
+  border: 1px solid var(--danger-pill-border);
   border-radius: 6px;
   padding: 1px 8px;
   font-size: 0.7rem;
@@ -592,12 +616,12 @@ body {
 
 .task-icon-btn:hover {
   color: var(--accent);
-  background: rgba(56, 189, 248, 0.1);
+  background: var(--accent-hover-bg);
 }
 
 .task-icon-btn.delete:hover {
   color: var(--danger);
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--danger-hover-bg);
 }
 
 /* ---------- Estados vacíos ---------- */
@@ -634,17 +658,13 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(7, 11, 20, 0.7);
+  background: var(--modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
   z-index: 100;
   animation: fadeIn 0.2s ease;
-}
-
-:root[data-theme="light"] .modal-overlay {
-  background: rgba(15, 23, 42, 0.5);
 }
 
 .modal {
@@ -676,7 +696,7 @@ body {
 
 .modal-close:hover {
   color: var(--danger);
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--danger-hover-bg);
 }
 
 .modal-title {

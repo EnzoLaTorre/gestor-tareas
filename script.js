@@ -12,12 +12,23 @@ const THEME_KEY = 'gestor-tareas-v2-theme';
 // ---------- Constantes de dominio ----------
 const PRIORIDADES = { alta: 3, media: 2, baja: 1 };
 
+// ---------- Utilidad: generador de id único ----------
+// crypto.randomUUID() solo está disponible en contextos seguros (https/localhost).
+// Para que funcione también abriendo el archivo con file://, se usa un fallback
+// que siempre genera un valor único.
+function generarId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 // ============================================================
 // Clase base: Tarea
 // ============================================================
 class Tarea {
   constructor({ titulo, prioridad = 'media', categoria = 'otros', fechaLimite = null }) {
-    this.id = crypto.randomUUID();
+    this.id = generarId();
     this.titulo = titulo;
     this.prioridad = prioridad; // 'alta' | 'media' | 'baja'
     this.categoria = categoria; // 'trabajo' | 'estudio' | 'personal' | 'otros'
@@ -243,7 +254,7 @@ class GestorTareas {
     const vistos = new Set();
     this.tareas = this.tareas.map((t) => {
       if (!t.id || vistos.has(t.id)) {
-        t.id = crypto.randomUUID();
+        t.id = generarId();
       }
       vistos.add(t.id);
       return t;

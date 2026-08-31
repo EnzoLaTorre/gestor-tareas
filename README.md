@@ -35,7 +35,7 @@ Aplicación web de gestión de tareas construida con **JavaScript puro** aplican
 
 ```js
 {
-  id,             // crypto.randomUUID()
+  id,             // UUID único (crypto.randomUUID con fallback para file://)
   titulo,         // string
   prioridad,      // 'alta' | 'media' | 'baja'
   categoria,      // 'trabajo' | 'estudio' | 'personal' | 'otros'
