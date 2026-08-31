@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Gestor de tareas con JavaScript puro aplicando programación orientada a objetos: clases, encapsulamiento, herencia y persistencia con localStorage.">
+  <title>Gestor de Tareas · POO</title>
+
+  <!-- Tipografías -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app">
+    <header class="app-header">
+      <span class="logo">&lt;Gestor /&gt;</span>
+      <h1>Gestor de Tareas</h1>
+      <p class="subtitle">Programación orientada a objetos en JavaScript puro</p>
+    </header>
+
+    <section class="card form-card">
+      <form id="taskForm" novalidate>
+        <div class="field field-title">
+          <label for="task-title">Título</label>
+          <input type="text" id="task-title" name="title" placeholder="Escribe una tarea..." autocomplete="off">
+          <span class="error" data-error-for="title"></span>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label for="task-priority">Prioridad</label>
+            <select id="task-priority" name="priority">
+              <option value="alta">Alta</option>
+              <option value="media" selected>Media</option>
+              <option value="baja">Baja</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="task-date">Fecha límite</label>
+            <input type="date" id="task-date" name="date">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Agregar tarea</button>
+      </form>
+    </section>
+
+    <section class="card list-card">
+      <div class="list-toolbar">
+        <span class="pending-count">Pendientes: <strong id="pendingCount">0</strong></span>
+        <div class="filters" role="group" aria-label="Filtrar tareas">
+          <button class="filter-btn active" data-filter="todas">Todas</button>
+          <button class="filter-btn" data-filter="pendientes">Pendientes</button>
+          <button class="filter-btn" data-filter="completadas">Completadas</button>
+        </div>
+      </div>
+
+      <ul class="task-list" id="taskList" aria-live="polite"></ul>
+      <p class="empty-state" id="emptyState">No hay tareas. ¡Agrega una arriba!</p>
+    </section>
+  </div>
+
+  <footer class="app-footer">
+    <p>Hecho con JavaScript puro y POO · HTML, CSS y JS</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
