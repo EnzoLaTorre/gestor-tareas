@@ -309,7 +309,7 @@ class UI {
     this.progressPct = document.getElementById('progressPct');
     this.progressFill = document.getElementById('progressFill');
 
-    this.themeToggle = document.getElementById('themeToggle');
+    this.themeToggle = document.getElementById('theme-toggle');
     this.filterButtons = document.querySelectorAll('.filter-btn');
 
     this.editModal = document.getElementById('editModal');
@@ -353,7 +353,7 @@ class UI {
       });
     });
 
-    this.themeToggle.addEventListener('click', () => this._alternarTema());
+    this.themeToggle.addEventListener('change', () => this._alternarTema());
 
     // Modal de edición
     this.editModalClose.addEventListener('click', () => this._cerrarModal());
@@ -604,6 +604,7 @@ class UI {
     const guardado = localStorage.getItem(THEME_KEY);
     const tema = guardado === 'light' ? 'light' : 'dark';
     document.documentElement.dataset.theme = tema;
+    this.themeToggle.checked = tema === 'light';
   }
 
   _alternarTema() {

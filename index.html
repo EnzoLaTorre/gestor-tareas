@@ -19,10 +19,17 @@
     <header class="app-header">
       <div class="header-top">
         <span class="logo">&lt;Gestor /&gt;</span>
-        <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
-          <span class="theme-ico sun" aria-hidden="true">☀️</span>
-          <span class="theme-ico moon" aria-hidden="true">🌙</span>
-        </button>
+        <label class="theme-switch">
+          <div class="theme-switch__round">
+            <input type="checkbox" name="onoff" id="theme-toggle" class="theme-switch__input" aria-label="Cambiar entre modo oscuro y modo claro">
+            <div class="theme-switch__back">
+              <label for="theme-toggle" class="theme-switch__button">
+                <span class="theme-switch__on">0</span>
+                <span class="theme-switch__off">I</span>
+              </label>
+            </div>
+          </div>
+        </label>
       </div>
       <h1>Gestor de Tareas</h1>
       <p class="subtitle">Programación orientada a objetos en JavaScript puro</p>
