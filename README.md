@@ -1,6 +1,6 @@
-# 🗂️ Gestor de Tareas
+# 🗂️ MEPOOL · Gestor de Tareas
 
-Aplicación web de gestión de tareas construida con **JavaScript puro** aplicando **Programación Orientada a Objetos (POO)**: clases, herencia, polimorfismo, encapsulamiento y persistencia con `localStorage`.
+Aplicación web de gestión de tareas construida con **JavaScript puro** aplicando **Programación Orientada a Objetos (POO)**: clases, herencia, polimorfismo, encapsulamiento y persistencia con `localStorage`. Incluye pantalla de bienvenida animada "MEPOOL".
 
 ## ✨ Funcionalidades
 

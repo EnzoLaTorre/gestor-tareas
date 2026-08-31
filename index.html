@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Gestor de tareas completo con JavaScript puro aplicando programación orientada a objetos: clases, herencia, categorías, edición, búsqueda, filtros, ordenamiento, persistencia con localStorage y temas claro/oscuro.">
-  <title>Gestor de Tareas · POO</title>
+  <meta name="description" content="MEPOOL · Gestor de tareas completo con JavaScript puro aplicando programación orientada a objetos: clases, herencia, categorías, edición, búsqueda, filtros, ordenamiento, persistencia con localStorage y temas claro/oscuro.">
+  <title>MEPOOL · Gestor de Tareas</title>
 
   <!-- Tipografías -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,11 +14,21 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Pantalla de bienvenida -->
+  <div id="welcome-screen" class="welcome-screen" aria-hidden="true" role="presentation">
+    <div class="welcome-content">
+      <div class="welcome-logo-column">
+        <span class="welcome-logo">MEPOOL</span>
+      </div>
+      <p class="welcome-tagline">Organiza. Enfócate. Avanza.</p>
+    </div>
+    <div class="light-flash" aria-hidden="true"></div>
+  </div>
 
   <div class="app">
     <header class="app-header">
       <div class="header-top">
-        <span class="logo">&lt;Gestor /&gt;</span>
+        <span class="logo">MEPOOL</span>
         <label class="theme-switch">
           <div class="theme-switch__round">
             <input type="checkbox" name="onoff" id="theme-toggle" class="theme-switch__input" aria-label="Cambiar entre modo oscuro y modo claro">
@@ -31,7 +41,7 @@
           </div>
         </label>
       </div>
-      <h1>Gestor de Tareas</h1>
+      <h1>MEPOOL</h1>
       <p class="subtitle">Programación orientada a objetos en JavaScript puro</p>
     </header>
 

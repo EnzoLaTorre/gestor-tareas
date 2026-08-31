@@ -621,4 +621,49 @@ class UI {
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
   new UI();
+  iniciarBienvenida();
 });
+
+// ============================================================
+// MEPOOL · Pantalla de bienvenida
+// ============================================================
+function iniciarBienvenida() {
+  const screen = document.getElementById('welcome-screen');
+  if (!screen) return;
+
+  const deseos = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const light = screen.querySelector('.light-flash');
+  let terminada = false;
+
+  const ocultar = () => {
+    if (terminada) return;
+    terminada = true;
+    screen.classList.add('is-revealing');
+    // breve pausa para que la luz se expanda y luego desvanecer
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        screen.classList.add('is-hidden');
+        // al terminar la transición, liberar el DOM
+        const liberar = () => screen.remove();
+        if (screen.parentElement) {
+          screen.addEventListener('transitionend', () => screen.remove(), { once: true });
+          setTimeout(liberar, 1400); // respaldo por si transitionend no dispara
+        }
+      }, 300);
+    });
+  };
+
+  if (deseos.matches) {
+    // Reducción de movimiento: transición simple y breve
+    setTimeout(ocultar, 900);
+    return;
+  }
+
+  // Caso normal: disparar por el final de la animación de la luz,
+  // con setTimeout de respaldo para no bloquearse.
+  if (light) {
+    light.addEventListener('animationend', ocultar, { once: true });
+  }
+  setTimeout(ocultar, 3900);
+}
+
