@@ -631,8 +631,6 @@ function iniciarBienvenida() {
   const screen = document.getElementById('welcome-screen');
   if (!screen) return;
 
-  const deseos = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const light = screen.querySelector('.light-flash');
   let terminada = false;
 
   const ocultar = () => {
@@ -653,19 +651,8 @@ function iniciarBienvenida() {
     });
   };
 
-  if (deseos.matches) {
-    // Reducción de movimiento: transición simple y breve
-    setTimeout(ocultar, 900);
-    return;
-  }
-
-  // Caso normal: disparar por el final de la última animación (lightPulse),
-  // con setTimeout de respaldo para no bloquearse.
-  if (light) {
-    light.addEventListener('animationend', (e) => {
-      if (e.animationName === 'lightPulse') ocultar();
-    }, { once: true });
-  }
-  setTimeout(ocultar, 5300);
+  // Disparador determinista: el flash y la transición salen siempre igual,
+  // en PC y móvil, sin depender de prefers-reduced-motion.
+  setTimeout(ocultar, 5200);
 }
 

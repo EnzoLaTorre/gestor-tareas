@@ -1025,16 +1025,16 @@ body {
 .light-flash .flash {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(139, 92, 246, 0.55) 40%, rgba(139, 92, 246, 0) 75%);
-  mix-blend-mode: screen;
-  filter: blur(6px);
+  background: radial-gradient(circle at 50% 50%, #ffffff 0%, #ffffff 22%, rgba(139, 92, 246, 0.85) 52%, rgba(139, 92, 246, 0) 78%);
+  filter: blur(8px);
+  box-shadow: inset 0 0 120px 40px rgba(255, 255, 255, 0.55);
   opacity: 0;
-  transform: scale(0.6);
+  transform: scale(0.5);
   pointer-events: none;
 }
 
 .welcome-screen.is-revealing .light-flash .flash {
-  animation: flashReveal 0.9s ease-out forwards;
+  animation: flashReveal 0.95s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes welcomeLogoIn {
@@ -1093,18 +1093,22 @@ body {
 @keyframes flashReveal {
   0% {
     opacity: 0;
-    transform: scale(0.6);
+    transform: scale(0.5);
   }
-  25% {
+  18% {
     opacity: 1;
   }
-  55% {
-    opacity: 0.75;
-    transform: scale(1.6);
+  45% {
+    opacity: 0.95;
+    transform: scale(1.5);
+  }
+  70% {
+    opacity: 0.55;
+    transform: scale(1.9);
   }
   100% {
     opacity: 0;
-    transform: scale(2.2);
+    transform: scale(2.4);
   }
 }
 
@@ -1138,12 +1142,6 @@ body {
     animation: none;
     opacity: 1;
     transition: opacity 0.4s ease 0.2s;
-  }
-  .light-flash::before,
-  .light-flash::after,
-  .light-flash .flash {
-    animation: none;
-    opacity: 0;
   }
   .welcome-screen {
     transition: opacity 0.5s ease, visibility 0.5s ease;
