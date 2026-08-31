@@ -639,7 +639,7 @@ function iniciarBienvenida() {
     if (terminada) return;
     terminada = true;
     screen.classList.add('is-revealing');
-    // breve pausa para que la luz se expanda y luego desvanecer
+    // pausa para que el flash pegue su pico y luego desvanecer la bienvenida
     requestAnimationFrame(() => {
       setTimeout(() => {
         screen.classList.add('is-hidden');
@@ -647,9 +647,9 @@ function iniciarBienvenida() {
         const liberar = () => screen.remove();
         if (screen.parentElement) {
           screen.addEventListener('transitionend', () => screen.remove(), { once: true });
-          setTimeout(liberar, 1400); // respaldo por si transitionend no dispara
+          setTimeout(liberar, 1600); // respaldo por si transitionend no dispara
         }
-      }, 300);
+      }, 320);
     });
   };
 
@@ -659,11 +659,13 @@ function iniciarBienvenida() {
     return;
   }
 
-  // Caso normal: disparar por el final de la animación de la luz,
+  // Caso normal: disparar por el final de la última animación (lightPulse),
   // con setTimeout de respaldo para no bloquearse.
   if (light) {
-    light.addEventListener('animationend', ocultar, { once: true });
+    light.addEventListener('animationend', (e) => {
+      if (e.animationName === 'lightPulse') ocultar();
+    }, { once: true });
   }
-  setTimeout(ocultar, 3900);
+  setTimeout(ocultar, 5300);
 }
 
