@@ -603,13 +603,14 @@ class UI {
   _aplicarTemaGuardado() {
     const guardado = localStorage.getItem(THEME_KEY);
     const tema = guardado === 'light' ? 'light' : 'dark';
-    document.body.dataset.theme = tema;
+    document.documentElement.dataset.theme = tema;
   }
 
   _alternarTema() {
-    const actual = document.body.dataset.theme;
+    const raiz = document.documentElement;
+    const actual = raiz.dataset.theme;
     const nuevo = actual === 'dark' ? 'light' : 'dark';
-    document.body.dataset.theme = nuevo;
+    raiz.dataset.theme = nuevo;
     localStorage.setItem(THEME_KEY, nuevo);
   }
 }
