@@ -611,8 +611,17 @@ class UI {
     const raiz = document.documentElement;
     const actual = raiz.dataset.theme;
     const nuevo = actual === 'dark' ? 'light' : 'dark';
+
+    // Desactiva transiciones temporalmente para que el cambio de tema sea
+    // instantáneo (evita la animación lenta/el repintado costoso en móvil).
+    raiz.classList.add('theme-transition-disabled');
     raiz.dataset.theme = nuevo;
     localStorage.setItem(THEME_KEY, nuevo);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        raiz.classList.remove('theme-transition-disabled');
+      });
+    });
   }
 }
 

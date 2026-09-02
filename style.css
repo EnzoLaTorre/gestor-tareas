@@ -122,6 +122,17 @@ html {
   color-scheme: dark;
 }
 
+/* Desactiva transiciones durante el cambio de tema (lo hace instantáneo,
+   evitando el repintado lento/entrecortado en móvil). */
+html.theme-transition-disabled,
+html.theme-transition-disabled *,
+html.theme-transition-disabled *::before,
+html.theme-transition-disabled *::after {
+  transition: none !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+}
+
 :root[data-theme="light"] {
   color-scheme: light;
 }
@@ -136,7 +147,7 @@ body {
   flex-direction: column;
   align-items: center;
   position: relative;
-  transition: background 0.3s, color 0.3s;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* ---------- Atmósfera visual: luces difuminadas de fondo ---------- */
@@ -1102,6 +1113,24 @@ body::before {
   align-items: center;
   text-align: center;
   padding: 0 20px;
+}
+
+.welcome-logo-img {
+  width: clamp(110px, 26vw, 200px);
+  height: auto;
+  display: block;
+  margin-bottom: 10px;
+  filter: drop-shadow(0 0 28px var(--btn-shadow)) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.4));
+  opacity: 0;
+  animation: welcomeLogoIn 1.6s ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-logo-img {
+    animation: none;
+    opacity: 1;
+    transition: opacity 0.4s ease;
+  }
 }
 
 .welcome-logo {
