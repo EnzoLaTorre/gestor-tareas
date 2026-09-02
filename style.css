@@ -161,7 +161,7 @@ body::before {
     radial-gradient(600px 320px at 12% -5%, rgba(139, 92, 246, 0.12), transparent 60%),
     radial-gradient(700px 380px at 95% 5%, rgba(236, 72, 153, 0.1), transparent 60%),
     radial-gradient(800px 500px at 50% 115%, rgba(139, 92, 246, 0.08), transparent 60%),
-    url('MODOOSCURO.jpg?v=1') center / cover no-repeat;
+    url('img/MODOOSCURO.jpg?v=1') center / cover no-repeat;
   filter: blur(24px) brightness(0.75) saturate(1.1);
   transform: scale(1.1);
   opacity: 0.6;
@@ -171,7 +171,7 @@ body::before {
   background:
     radial-gradient(600px 320px at 12% -5%, rgba(124, 58, 237, 0.1), transparent 60%),
     radial-gradient(700px 380px at 95% 5%, rgba(219, 39, 119, 0.08), transparent 60%),
-    url('MODOCLARO.jpg?v=1') center / cover no-repeat;
+    url('img/MODOCLARO.jpg?v=1') center / cover no-repeat;
   filter: blur(24px) brightness(1.05) saturate(1.1);
   transform: scale(1.1);
   opacity: 0.55;

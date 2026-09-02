@@ -1,8 +1,10 @@
 # 🗂️ MEPOOL · Gestor de Tareas
 
-Aplicación web de gestión de tareas construida con **JavaScript puro** aplicando **Programación Orientada a Objetos (POO)**: clases, herencia, polimorfismo, encapsulamiento y persistencia con `localStorage`. Incluye pantalla de bienvenida animada "MEPOOL".
+> Aplicación web de gestión de tareas construida con **JavaScript puro** aplicando **Programación Orientada a Objetos (POO)**: clases, herencia, polimorfismo, encapsulamiento y persistencia con `localStorage`. Incluye pantalla de bienvenida animada, modo oscuro/claro y un diseño moderno tipo SaaS.
 
-## ✨ Funcionalidades
+---
+
+## ✨ Características principales
 
 - ➕ **Crear tareas** con título, prioridad, categoría y fecha límite.
 - ✏️ **Editar tareas** (título, prioridad, categoría, fecha límite) mediante un módulo/modal.
@@ -21,6 +23,8 @@ Aplicación web de gestión de tareas construida con **JavaScript puro** aplican
 - 📱 **Diseño responsive** (escritorio, tablet, celular).
 - ♿ **Accesibilidad**: labels conectados, `aria-label`, focus visible, navegación por teclado.
 - 🧹 **Estados vacíos** agradables cuando no hay tareas o resultados.
+
+---
 
 ## 🧠 Enfoque de Programación Orientada a Objetos
 
@@ -53,23 +57,35 @@ Aplicación web de gestión de tareas construida con **JavaScript puro** aplican
 - `estadisticas()`
 - `guardar()` / `cargar()` (con `JSON.stringify` / `JSON.parse` y reconstrucción de instancias)
 
-## 🛠️ Tecnologías
+---
 
-- HTML
-- CSS (con variables CSS para temas)
-- JavaScript (ES6+ / POO)
+## 🛠️ Tecnologías utilizadas
 
-Sin frameworks ni dependencias externas.
+- **HTML5** — Estructura semántica y accesible.
+- **CSS3** — Variables CSS para temas, animaciones y diseño responsive.
+- **JavaScript (ES6+ / POO)** — Lógica de la aplicación con clases, herencia y polimorfismo.
+
+> Sin frameworks ni dependencias externas.
+
+---
 
 ## 📁 Estructura del proyecto
 
 ```
 gestor-tareas/
-├── index.html     # Estructura de la aplicación (formulario, lista, estadísticas, modal)
-├── style.css      # Estilos, temas oscuro/claro, animaciones, responsive
-├── script.js      # Lógica POO (Tarea, GestorTareas, UI)
-└── README.md
+├── index.html      # Estructura de la aplicación (formulario, lista, estadísticas, modal)
+├── style.css       # Estilos, temas oscuro/claro, animaciones, responsive
+├── script.js       # Lógica POO (Tarea, GestorTareas, UI)
+├── README.md       # Documentación del proyecto
+└── img/            # Imágenes del proyecto
+    ├── MODOCLARO.jpg
+    ├── MODOOSCURO.jpg
+    ├── logo-mepool.png
+    ├── favicon.png
+    └── LOGO.png
 ```
+
+---
 
 ## 🚀 Cómo ejecutar
 
@@ -78,11 +94,27 @@ gestor-tareas/
 
 No requiere instalación, backend ni base de datos externa. Las tareas se guardan en el `localStorage` del navegador.
 
-## 📸 Capturas
+También puedes ver la versión en vivo en **GitHub Pages**:  
+👉 [enzolatorre.github.io/gestor-tareas](https://enzolatorre.github.io/gestor-tareas/)
+
+---
+
+## 📸 Vista previa
 
 | Modo claro | Modo oscuro |
 |:---:|:---:|
-| ![MEPOOL en modo claro](MODOCLARO.jpg?raw=true) | ![MEPOOL en modo oscuro](MODOOSCURO.jpg?raw=true) |
+| ![MEPOOL en modo claro](img/MODOCLARO.jpg?raw=true) | ![MEPOOL en modo oscuro](img/MODOOSCURO.jpg?raw=true) |
+
+---
+
+## 👤 Autor
+
+**Enzo La Torre**
+
+- 🌐 [Portafolio](https://enzolatorre.github.io)
+- 🐙 [GitHub](https://github.com/EnzoLaTorre)
+
+---
 
 ## 🔭 Posibles mejoras futuras
 
