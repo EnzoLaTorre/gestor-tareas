@@ -224,10 +224,11 @@ body::before {
 }
 
 .brand-logo {
-  width: 26px;
-  height: 26px;
-  color: var(--accent);
-  filter: drop-shadow(0 0 10px var(--btn-shadow));
+  width: 28px;
+  height: 28px;
+  display: block;
+  object-fit: contain;
+  border-radius: 6px;
 }
 
 .app-header .logo {
