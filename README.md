@@ -80,7 +80,9 @@ No requiere instalación, backend ni base de datos externa. Las tareas se guarda
 
 ## 📸 Capturas
 
-> *Screenshot del proyecto próximamente.*
+| Modo claro | Modo oscuro |
+|:---:|:---:|
+| ![MEPOOL en modo claro](MODOCLARO.jpg?raw=true) | ![MEPOOL en modo oscuro](MODOOSCURO.jpg?raw=true) |
 
 ## 🔭 Posibles mejoras futuras
 
