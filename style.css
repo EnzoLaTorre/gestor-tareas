@@ -217,11 +217,9 @@ body::before {
 }
 
 .brand-logo {
-  width: 28px;
-  height: 28px;
-  display: block;
-  object-fit: contain;
-  border-radius: 7px;
+  width: 26px;
+  height: 26px;
+  color: var(--accent);
   filter: drop-shadow(0 0 10px var(--btn-shadow));
 }
 
@@ -1113,24 +1111,6 @@ body::before {
   align-items: center;
   text-align: center;
   padding: 0 20px;
-}
-
-.welcome-logo-img {
-  width: clamp(110px, 26vw, 200px);
-  height: auto;
-  display: block;
-  margin-bottom: 10px;
-  filter: drop-shadow(0 0 28px var(--btn-shadow)) drop-shadow(0 8px 18px rgba(0, 0, 0, 0.4));
-  opacity: 0;
-  animation: welcomeLogoIn 1.6s ease-out forwards;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .welcome-logo-img {
-    animation: none;
-    opacity: 1;
-    transition: opacity 0.4s ease;
-  }
 }
 
 .welcome-logo {
