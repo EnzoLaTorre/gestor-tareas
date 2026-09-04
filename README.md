@@ -108,7 +108,7 @@ También puedes ver la versión en vivo en **GitHub Pages**:
 
 **Enzo La Torre**
 
-- [Portafolio](https://enzolatorre.github.io)
+- [Portafolio](https://enzolatorre.github.io/Portfolio/)
 - [GitHub](https://github.com/EnzoLaTorre)
 
 ## Posibles mejoras futuras
