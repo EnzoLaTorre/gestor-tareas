@@ -750,6 +750,7 @@ body::before {
   cursor: grabbing;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .task-item.dragging:hover {
   transform: scale(0.98); /* anula el hover (translateY) mientras arrastras */
@@ -757,6 +758,7 @@ body::before {
 .task-list.is-dragging .task-item {
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 .task-item.drag-over {
   border-color: var(--accent);
