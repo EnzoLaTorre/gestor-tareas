@@ -15,6 +15,7 @@ Aplicación web de gestión de tareas construida con **JavaScript puro** aplican
 - **Filtros por estado**: Todas · Pendientes · Completadas · Vencidas.
 - **Filtros por categoría**: Trabajo · Estudio · Personal · Otros.
 - **Ordenamiento**: fecha límite, prioridad, nombre (A-Z / Z-A), fecha de creación.
+- **Arrastrar y soltar** para reordenar tareas manualmente (mouse y táctil) con orden persistido.
 - **Estadísticas** dinámicas (total, pendientes, completadas, vencidas, prioridad alta).
 - **Barra de progreso** calculada `(completadas / total) * 100`.
 - **Persistencia** en `localStorage` con reconstrucción correcta de instancias.
@@ -113,7 +114,6 @@ También puedes ver la versión en vivo en **GitHub Pages**:
 
 ## Posibles mejoras futuras
 
-- Arrastrar y soltar para reordenar tareas manualmente.
 - Exportar / importar tareas en JSON.
 - Recordatorios y notificaciones de tareas vencidas.
 - Etiquetas personalizadas más allá de las categorías fijas.

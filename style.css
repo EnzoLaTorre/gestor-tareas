@@ -694,6 +694,7 @@ body::before {
 }
 
 .task-item {
+  cursor: grab;
   display: flex;
   align-items: center;
   gap: 13px;
@@ -740,6 +741,26 @@ body::before {
 
 .task-item.checking {
   animation: completePop 0.3s ease;
+}
+
+.task-item.dragging {
+  opacity: 0.4;
+  transform: scale(0.98);
+  box-shadow: var(--shadow);
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.task-item.dragging:hover {
+  transform: scale(0.98); /* anula el hover (translateY) mientras arrastras */
+}
+.task-list.is-dragging .task-item {
+  user-select: none;
+  -webkit-user-select: none;
+}
+.task-item.drag-over {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft-border);
 }
 
 @keyframes completePop {

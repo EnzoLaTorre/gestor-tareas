@@ -202,6 +202,8 @@ class GestorTareas {
         return copia.sort((a, b) => a.titulo.localeCompare(b.titulo, 'es'));
       case 'nombre-za':
         return copia.sort((a, b) => b.titulo.localeCompare(a.titulo, 'es'));
+      case 'manual':
+        return copia; // ya es una copia: respeta el orden en que está guardado
       case 'creacion':
       default:
         return copia.sort((a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion));
@@ -212,6 +214,24 @@ class GestorTareas {
     return t.fechaLimite ? new Date(t.fechaLimite + 'T00:00:00').getTime() : Infinity;
   }
 
+  reordenar(idsEnOrden) {
+    const porId = new Map(this.tareas.map((t) => [t.id, t]));
+
+    const reordenadas = [];
+    for (const id of idsEnOrden) {
+      if (porId.has(id)) {
+        reordenadas.push(porId.get(id));
+        porId.delete(id);
+      }
+    }
+
+    this.tareas.forEach((t) => {
+      if (porId.has(t.id)) reordenadas.push(t);
+    });
+
+    this.tareas = reordenadas;
+    this.guardar();
+  }
   // ---- Estadísticas ----
   estadisticas() {
     const total = this.tareas.length;
@@ -273,10 +293,14 @@ class UI {
 
     this.filtroEstado = 'todas';
     this.categoriaFiltro = 'todas';
-    this.criterioOrden = 'creacion';
+    this.criterioOrden = 'manual';
     this.busqueda = '';
     this.editandoId = null;
+    this._drag = null; // objeto con el estado del arrastre en curso
 
+    this._onDragMove = (e) => this._manejarMove(e);
+    this._onDragUp = () => this._finalizarDrag();
+    this._onDragCancel = () => this._cancelarDrag();
     this._cacheElementos();
     this._aplicarTemaGuardado();
     this._bindEventos();
@@ -368,6 +392,7 @@ class UI {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !this.editModal.hidden) this._cerrarModal();
     });
+    this.taskList.addEventListener('pointerdown', (e) => this._iniciarDrag(e));
   }
 
   // ---- Crear / Editar tarea ----
@@ -597,6 +622,122 @@ class UI {
         });
       }
     });
+  }
+
+  // ---- Arrastrar y soltar (mouse + táctil) ----
+  _iniciarDrag(e) {
+    // No robar los clics de botones ni del checkbox.
+    if (e.target.closest('button, .checkbox, input')) return;
+
+    const item = e.target.closest('.task-item');
+    if (!item) return;
+
+    this._drag = {
+      item,
+      isTouch: e.pointerType === 'touch',
+      startY: e.clientY,
+      activo: false,
+      holdTimer: null,
+    };
+
+    // En táctil, "mantener presionado" entra en modo arrastre; así no se
+    // pelea con el scroll ni con los taps normales.
+    if (this._drag.isTouch) {
+      this._drag.holdTimer = setTimeout(() => {
+        if (!this._drag) return;
+        this._drag.activo = true;
+        this._activarDrag(this._drag.item);
+      }, 350);
+    }
+
+    // Bloquea la selección de texto del conjunto mientras se arrastra
+    // (evita el resaltador azul al mover rápido con el mouse).
+    this.taskList.classList.add('is-dragging');
+
+    window.addEventListener('pointermove', this._onDragMove);
+    window.addEventListener('pointerup', this._onDragUp);
+    window.addEventListener('pointercancel', this._onDragCancel);
+  }
+
+  _activarDrag(item) {
+    item.classList.add('dragging');
+    item.style.touchAction = 'none'; // bloquea el scroll nativo del navegador mientras arrastras
+  }
+
+  _manejarMove(e) {
+    if (!this._drag) return;
+    const drag = this._drag;
+
+    if (!drag.activo) {
+      const distancia = Math.abs(e.clientY - drag.startY);
+      if (drag.isTouch) {
+        if (distancia > 10) this._cancelarDrag(); // se movió antes de completar el "hold"
+        return;
+      }
+      if (distancia < 5) return; // umbral en mouse: evita arrancar con un clic
+      drag.activo = true;
+      this._activarDrag(drag.item);
+    }
+
+    const lista = this.taskList;
+    const resto = [...lista.querySelectorAll('.task-item:not(.dragging)')];
+
+    // Lugar de inserción: la mitad vertical de cada tarjeta decide "antes de cuál".
+    let insertarAntes = null;
+    for (const otro of resto) {
+      const r = otro.getBoundingClientRect();
+      if (e.clientY < r.top + r.height / 2) {
+        insertarAntes = otro;
+        break;
+      }
+    }
+
+    // Marca la tarjeta destino (indicador visual) y mueve el DOM en vivo.
+    lista.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'));
+    if (insertarAntes) insertarAntes.classList.add('drag-over');
+
+    lista.insertBefore(drag.item, insertarAntes);
+  }
+
+  _finalizarDrag() {
+    if (!this._drag) return;
+    const drag = this._drag;
+
+    drag.item.classList.remove('dragging', 'drag-over');
+    drag.item.style.touchAction = '';
+
+    // Sin arrastre real (un simple clic/tap): solo limpiar, sin re-render.
+    if (!drag.activo) {
+      this._limpiarDrag();
+      return;
+    }
+
+    // El orden final del DOM ES el nuevo orden: lo persistimos en la colección.
+    const orden = [...this.taskList.querySelectorAll('.task-item')].map((li) => li.dataset.id);
+    this.gestor.reordenar(orden);
+    this.criterioOrden = 'manual';
+    this.sortOptions.value = 'manual';
+
+    this._limpiarDrag();
+    this.render();
+  }
+
+  _cancelarDrag() {
+    if (!this._drag) return;
+    const item = this._drag.item;
+    item.classList.remove('dragging', 'drag-over');
+    item.style.touchAction = '';
+    this._limpiarDrag();
+    this.render(); // si cancelaste a mitad, restaura el orden guardado
+  }
+
+  _limpiarDrag() {
+    if (this._drag && this._drag.holdTimer) clearTimeout(this._drag.holdTimer);
+    this._drag = null;
+    this.taskList.classList.remove('is-dragging');
+    window.removeEventListener('pointermove', this._onDragMove);
+    window.removeEventListener('pointerup', this._onDragUp);
+    window.removeEventListener('pointercancel', this._onDragCancel);
   }
 
   // ---- Tema (dark / light) ----
