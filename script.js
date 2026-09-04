@@ -298,9 +298,11 @@ class UI {
     this.editandoId = null;
     this._drag = null; // objeto con el estado del arrastre en curso
 
-    this._onDragMove = (e) => this._manejarMove(e);
-    this._onDragUp = () => this._finalizarDrag();
-    this._onDragCancel = () => this._cancelarDrag();
+    this._onMouseMove = (e) => this._manejarMove(e, false);
+    this._onMouseUp = () => this._finalizarDrag();
+    this._onTouchMove = (e) => this._manejarMove(e, true);
+    this._onTouchEnd = () => this._finalizarDrag();
+    this._onTouchCancel = () => this._cancelarDrag();
     this._cacheElementos();
     this._aplicarTemaGuardado();
     this._bindEventos();
@@ -392,7 +394,10 @@ class UI {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !this.editModal.hidden) this._cerrarModal();
     });
-    this.taskList.addEventListener('pointerdown', (e) => this._iniciarDrag(e));
+    // Delegación del arrastre: mouse y táctil manejan sus propios eventos
+    // (un solo listener sobre la lista, aunque el HTML se re-renderice).
+    this.taskList.addEventListener('mousedown', (e) => this._iniciarDrag(e, false));
+    this.taskList.addEventListener('touchstart', (e) => this._iniciarDrag(e, true), { passive: true });
   }
 
   // ---- Crear / Editar tarea ----
@@ -625,24 +630,30 @@ class UI {
   }
 
   // ---- Arrastrar y soltar (mouse + táctil) ----
-  _iniciarDrag(e) {
+  // Doble vía: mousedown/mousemove/mouseup en escritorio y
+  // touchstart/touchmove/touchend en móvil. El táctil no usa Pointer Events
+  // porque el navegador se apodera del gesto para hacer scroll (pointercancel).
+  // La clave: solo se previene el scroll cuando el drag ya está activo.
+  _iniciarDrag(e, esTouch) {
     // No robar los clics de botones ni del checkbox.
     if (e.target.closest('button, .checkbox, input')) return;
 
     const item = e.target.closest('.task-item');
     if (!item) return;
 
+    const y = esTouch ? e.touches[0].clientY : e.clientY;
+
     this._drag = {
       item,
-      isTouch: e.pointerType === 'touch',
-      startY: e.clientY,
+      esTouch,
+      startY: y,
       activo: false,
       holdTimer: null,
     };
 
-    // En táctil, "mantener presionado" entra en modo arrastre; así no se
-    // pelea con el scroll ni con los taps normales.
-    if (this._drag.isTouch) {
+    // Táctil: "mantener presionado" activa el arrastre; si el dedo se mueve
+    // antes de completar el hold, es un scroll normal y se cancela.
+    if (esTouch) {
       this._drag.holdTimer = setTimeout(() => {
         if (!this._drag) return;
         this._drag.activo = true;
@@ -650,34 +661,42 @@ class UI {
       }, 350);
     }
 
-    // Bloquea la selección de texto del conjunto mientras se arrastra
-    // (evita el resaltador azul al mover rápido con el mouse).
+    // Bloquea la selección de texto del conjunto (también el callout de iOS).
     this.taskList.classList.add('is-dragging');
 
-    window.addEventListener('pointermove', this._onDragMove);
-    window.addEventListener('pointerup', this._onDragUp);
-    window.addEventListener('pointercancel', this._onDragCancel);
+    // touchmove debe ser no-pasivo para poder llamar a preventDefault().
+    window.addEventListener('touchmove', this._onTouchMove, { passive: false });
+    window.addEventListener('touchend', this._onTouchEnd);
+    window.addEventListener('touchcancel', this._onTouchCancel);
+    window.addEventListener('mousemove', this._onMouseMove);
+    window.addEventListener('mouseup', this._onMouseUp);
   }
 
   _activarDrag(item) {
     item.classList.add('dragging');
-    item.style.touchAction = 'none'; // bloquea el scroll nativo del navegador mientras arrastras
+    item.style.touchAction = 'none'; // refuerza el bloqueo de scroll mientras arrastras
   }
 
-  _manejarMove(e) {
-    if (!this._drag) return;
+  _manejarMove(e, esTouch) {
+    if (!this._drag || this._drag.esTouch !== esTouch) return;
     const drag = this._drag;
+    const y = esTouch ? e.touches[0].clientY : e.clientY;
 
     if (!drag.activo) {
-      const distancia = Math.abs(e.clientY - drag.startY);
-      if (drag.isTouch) {
-        if (distancia > 10) this._cancelarDrag(); // se movió antes de completar el "hold"
+      const distancia = Math.abs(y - drag.startY);
+      if (esTouch) {
+        // El dedo se movió antes del hold: scroll normal, se cancela el intento.
+        if (distancia > 12) this._cancelarDrag();
         return;
       }
       if (distancia < 5) return; // umbral en mouse: evita arrancar con un clic
       drag.activo = true;
       this._activarDrag(drag.item);
     }
+
+    // Solo al arrastrar se frena la página: así el navegador entrega todos
+    // los touchmove en lugar de robárselos para el scroll a mitad de gesto.
+    if (esTouch) e.preventDefault();
 
     const lista = this.taskList;
     const resto = [...lista.querySelectorAll('.task-item:not(.dragging)')];
@@ -686,7 +705,7 @@ class UI {
     let insertarAntes = null;
     for (const otro of resto) {
       const r = otro.getBoundingClientRect();
-      if (e.clientY < r.top + r.height / 2) {
+      if (y < r.top + r.height / 2) {
         insertarAntes = otro;
         break;
       }
@@ -725,19 +744,23 @@ class UI {
   _cancelarDrag() {
     if (!this._drag) return;
     const item = this._drag.item;
+    const estabaActivo = this._drag.activo;
     item.classList.remove('dragging', 'drag-over');
     item.style.touchAction = '';
     this._limpiarDrag();
-    this.render(); // si cancelaste a mitad, restaura el orden guardado
+    // Solo re-renderiza si el DOM ya se estaba moviendo en vivo.
+    if (estabaActivo) this.render();
   }
 
   _limpiarDrag() {
     if (this._drag && this._drag.holdTimer) clearTimeout(this._drag.holdTimer);
     this._drag = null;
     this.taskList.classList.remove('is-dragging');
-    window.removeEventListener('pointermove', this._onDragMove);
-    window.removeEventListener('pointerup', this._onDragUp);
-    window.removeEventListener('pointercancel', this._onDragCancel);
+    window.removeEventListener('touchmove', this._onTouchMove);
+    window.removeEventListener('touchend', this._onTouchEnd);
+    window.removeEventListener('touchcancel', this._onTouchCancel);
+    window.removeEventListener('mousemove', this._onMouseMove);
+    window.removeEventListener('mouseup', this._onMouseUp);
   }
 
   // ---- Tema (dark / light) ----
