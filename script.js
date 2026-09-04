@@ -715,7 +715,34 @@ class UI {
     lista.querySelectorAll('.drag-over').forEach((el) => el.classList.remove('drag-over'));
     if (insertarAntes) insertarAntes.classList.add('drag-over');
 
-    lista.insertBefore(drag.item, insertarAntes);
+    this._moverConFLIP(lista, drag.item, insertarAntes);
+  }
+
+  // FLIP: First / Last / Invert / Play. Anima las tarjetas no arrastradas
+  // para que "cedan" su espacio deslizándose en lugar de saltar de golpe.
+  _moverConFLIP(lista, dragged, insertarAntes) {
+    const items = [...lista.querySelectorAll('.task-item:not(.dragging)')];
+    const antes = new Map();
+
+    items.forEach((it) => antes.set(it, it.getBoundingClientRect().top));
+    lista.insertBefore(dragged, insertarAntes);
+
+    // Invert: coloca cada tarjeta donde estaba antes del movimiento.
+    items.forEach((it) => {
+      const delta = antes.get(it) - it.getBoundingClientRect().top;
+      if (!delta) return;
+      it.style.transition = 'none';
+      it.style.transform = `translateY(${delta}px)`;
+    });
+
+    // Fuerza el layout para que el navegador aplique la posición invertida.
+    void lista.offsetHeight;
+
+    // Play: se quita el transform y la transición hace el deslizamiento.
+    items.forEach((it) => {
+      it.style.transition = 'transform 0.18s ease';
+      it.style.transform = '';
+    });
   }
 
   _finalizarDrag() {
