@@ -114,6 +114,7 @@ class TareaUrgente extends Tarea {
 class GestorTareas {
   constructor() {
     this.tareas = [];
+    this.onError = null; // callback opcional para avisar de fallos de guardado
     this.cargar();
   }
 
@@ -136,14 +137,70 @@ class GestorTareas {
   }
 
   editar(id, datos) {
-    const tarea = this.tareas.find((t) => t.id === id);
-    if (!tarea) return false;
+    const indice = this.tareas.findIndex((t) => t.id === id);
+    if (indice === -1) return false;
+
+    let tarea = this.tareas[indice];
     if (datos.titulo !== undefined) tarea.titulo = datos.titulo;
-    if (datos.prioridad !== undefined) tarea.prioridad = datos.prioridad;
     if (datos.categoria !== undefined) tarea.categoria = datos.categoria;
     if ('fechaLimite' in datos) tarea.fechaLimite = datos.fechaLimite;
+    if (datos.prioridad !== undefined) {
+      tarea.prioridad = datos.prioridad;
+      // Mantiene coherente la herencia: alta => TareaUrgente, resto => Tarea.
+      tarea = this._convertirTipo(tarea);
+      this.tareas[indice] = tarea;
+    }
     this.guardar();
     return true;
+  }
+
+  // Devuelve una instancia del tipo correcto según la prioridad, conservando
+  // identidad, fecha de creación y estado de la tarea original.
+  _convertirTipo(tarea) {
+    const Clase = tarea.prioridad === 'alta' ? TareaUrgente : Tarea;
+    const nueva = new Clase({
+      titulo: tarea.titulo,
+      prioridad: tarea.prioridad,
+      categoria: tarea.categoria,
+      fechaLimite: tarea.fechaLimite,
+    });
+    nueva.id = tarea.id;
+    nueva.fechaCreacion = tarea.fechaCreacion;
+    nueva.completada = tarea.completada;
+    return nueva;
+  }
+
+  // Reinserta una tarea en una posición concreta (usado por "Deshacer").
+  insertarEn(indice, tarea) {
+    const i = Math.max(0, Math.min(indice, this.tareas.length));
+    this.tareas.splice(i, 0, tarea);
+    this.guardar();
+  }
+
+  // Elimina todas las completadas y devuelve [{ indice, tarea }] para deshacer.
+  eliminarCompletadas() {
+    const removidas = [];
+    const restantes = [];
+    this.tareas.forEach((t, indice) => {
+      if (t.completada) removidas.push({ indice, tarea: t });
+      else restantes.push(t);
+    });
+    if (removidas.length) {
+      this.tareas = restantes;
+      this.guardar();
+    }
+    return removidas;
+  }
+
+  // Restaura tareas eliminadas en bloque respetando sus índices originales.
+  restaurarEnBloque(removidas) {
+    [...removidas]
+      .sort((a, b) => a.indice - b.indice)
+      .forEach(({ indice, tarea }) => {
+        const i = Math.max(0, Math.min(indice, this.tareas.length));
+        this.tareas.splice(i, 0, tarea);
+      });
+    this.guardar();
   }
 
   toggleCompletada(id) {
@@ -169,13 +226,11 @@ class GestorTareas {
 
   // ---- Búsqueda por título (insensible a mayúsculas) ----
   buscar(texto) {
-    const q = texto.trim().toLowerCase();
-    if (!q) return this.tareas;
-    return this.tareas.filter((t) => t.titulo.toLowerCase().includes(q));
+    return this.filtrar('todas', 'todas', texto);
   }
 
-  // ---- Filtros combinados (estado + categoría) ----
-  filtrar(filtroEstado, categoria = 'todas') {
+  // ---- Filtros combinados (estado + categoría + texto) ----
+  filtrar(filtroEstado, categoria = 'todas', texto = '') {
     let resultado = this.tareas;
 
     if (filtroEstado === 'pendientes') resultado = this.obtenerPendientes();
@@ -184,6 +239,11 @@ class GestorTareas {
 
     if (categoria !== 'todas') {
       resultado = resultado.filter((t) => t.categoria === categoria);
+    }
+
+    const q = texto.trim().toLowerCase();
+    if (q) {
+      resultado = resultado.filter((t) => t.titulo.toLowerCase().includes(q));
     }
     return resultado;
   }
@@ -245,8 +305,17 @@ class GestorTareas {
 
   // ---- Persistencia (localStorage) ----
   guardar() {
-    const datos = this.tareas.map((t) => t.toJSON());
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(datos));
+    try {
+      const datos = this.tareas.map((t) => t.toJSON());
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(datos));
+      return true;
+    } catch (e) {
+      // Cuota llena, modo privado o almacenamiento bloqueado.
+      if (typeof this.onError === 'function') {
+        this.onError('No se pudieron guardar los cambios (almacenamiento lleno o bloqueado).');
+      }
+      return false;
+    }
   }
 
   cargar() {
@@ -296,6 +365,9 @@ class UI {
     this.criterioOrden = 'manual';
     this.busqueda = '';
     this.editandoId = null;
+    this._editandoIdModal = null;
+    this._ultimoFoco = null;
+    this._toastTimer = null;
     this._drag = null; // objeto con el estado del arrastre en curso
 
     this._onMouseMove = (e) => this._manejarMove(e, false);
@@ -304,6 +376,7 @@ class UI {
     this._onTouchEnd = () => this._finalizarDrag();
     this._onTouchCancel = () => this._cancelarDrag();
     this._cacheElementos();
+    this.gestor.onError = (msg) => this._mostrarToast(msg);
     this._aplicarTemaGuardado();
     this._bindEventos();
     this.render();
@@ -346,6 +419,16 @@ class UI {
     this.editDate = document.getElementById('edit-date');
     this.editModalClose = document.getElementById('editModalClose');
     this.editModalCancel = document.getElementById('editModalCancel');
+
+    this.clearCompletedBtn = document.getElementById('clearCompletedBtn');
+    this.exportBtn = document.getElementById('exportBtn');
+    this.importBtn = document.getElementById('importBtn');
+    this.importFile = document.getElementById('importFile');
+    this.remindersBtn = document.getElementById('remindersBtn');
+
+    this.toast = document.getElementById('toast');
+    this.toastMsg = document.getElementById('toastMsg');
+    this.toastAction = document.getElementById('toastAction');
   }
 
   _bindEventos() {
@@ -372,14 +455,28 @@ class UI {
 
     this.filterButtons.forEach((btn) => {
       btn.addEventListener('click', () => {
-        this.filterButtons.forEach((b) => b.classList.remove('active'));
+        this.filterButtons.forEach((b) => {
+          b.classList.remove('active');
+          b.setAttribute('aria-pressed', 'false');
+        });
         btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
         this.filtroEstado = btn.dataset.filter;
         this.render();
       });
     });
 
     this.themeToggle.addEventListener('change', () => this._alternarTema());
+
+    // Acciones de la lista
+    this.clearCompletedBtn.addEventListener('click', () => this._limpiarCompletadas());
+    this.exportBtn.addEventListener('click', () => this._exportarJSON());
+    this.importBtn.addEventListener('click', () => this.importFile.click());
+    this.importFile.addEventListener('change', (e) => this._importarJSON(e));
+    this.remindersBtn.addEventListener('click', () => this._activarRecordatorios());
+    this.toastAction.addEventListener('click', () => {
+      if (typeof this._toastAccion === 'function') this._toastAccion();
+    });
 
     // Modal de edición
     this.editModalClose.addEventListener('click', () => this._cerrarModal());
@@ -392,7 +489,12 @@ class UI {
       if (e.target === this.editModal) this._cerrarModal();
     });
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !this.editModal.hidden) this._cerrarModal();
+      if (this.editModal.hidden) return;
+      if (e.key === 'Escape') {
+        this._cerrarModal();
+      } else if (e.key === 'Tab') {
+        this._atraparFoco(e);
+      }
     });
     // Delegación del arrastre: mouse y táctil manejan sus propios eventos
     // (un solo listener sobre la lista, aunque el HTML se re-renderice).
@@ -412,11 +514,12 @@ class UI {
 
     if (!this._validarTitulo(titulo, this.titleInput, errorEl)) return;
 
+    const fechaLimite = this.dateInput.value || null;
     this.gestor.agregar({
       titulo,
       prioridad: this.prioritySelect.value,
       categoria: this.categorySelect.value,
-      fechaLimite: this.dateInput.value || null,
+      fechaLimite,
     });
 
     this.form.reset();
@@ -424,6 +527,7 @@ class UI {
     this.categorySelect.value = 'estudio';
     this.render();
     this.titleInput.focus();
+    this._advertirFechaPasada(fechaLimite);
   }
 
   _guardarEdicionDesdeForm() {
@@ -431,15 +535,17 @@ class UI {
     const errorEl = this.form.querySelector('[data-error-for="title"]');
     if (!this._validarTitulo(titulo, this.titleInput, errorEl)) return;
 
+    const fechaLimite = this.dateInput.value || null;
     this.gestor.editar(this.editandoId, {
       titulo,
       prioridad: this.prioritySelect.value,
       categoria: this.categorySelect.value,
-      fechaLimite: this.dateInput.value || null,
+      fechaLimite,
     });
     this._salirDeEdicion();
     this.render();
     this.titleInput.focus();
+    this._advertirFechaPasada(fechaLimite);
   }
 
   _salirDeEdicion() {
@@ -452,6 +558,7 @@ class UI {
 
   // ---- Edición desde tarjeta (modal) ----
   _abrirModalEdicion(tarea) {
+    this._ultimoFoco = document.activeElement;
     this.editTitle.value = tarea.titulo;
     this.editPriority.value = tarea.prioridad;
     this.editCategory.value = tarea.categoria;
@@ -466,6 +573,32 @@ class UI {
     this.editModal.hidden = true;
     this._editandoIdModal = null;
     document.body.style.overflow = '';
+    // Devuelve el foco al elemento que abrió el modal.
+    if (this._ultimoFoco && typeof this._ultimoFoco.focus === 'function') {
+      this._ultimoFoco.focus();
+    }
+    this._ultimoFoco = null;
+  }
+
+  // Mantiene el foco dentro del modal mientras está abierto.
+  _atraparFoco(e) {
+    const focusables = this.editModal.querySelectorAll(
+      'button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])'
+    );
+    const visibles = [...focusables].filter((el) => !el.hidden && el.offsetParent !== null);
+    if (!visibles.length) return;
+
+    const primero = visibles[0];
+    const ultimo = visibles[visibles.length - 1];
+    const activo = document.activeElement;
+
+    if (e.shiftKey && activo === primero) {
+      e.preventDefault();
+      ultimo.focus();
+    } else if (!e.shiftKey && activo === ultimo) {
+      e.preventDefault();
+      primero.focus();
+    }
   }
 
   _manejarGuardarEdicion() {
@@ -473,14 +606,16 @@ class UI {
     const errorEl = this.editForm.querySelector('[data-error-for="edit-title"]');
     if (!this._validarTitulo(titulo, this.editTitle, errorEl)) return;
 
+    const fechaLimite = this.editDate.value || null;
     this.gestor.editar(this._editandoIdModal, {
       titulo,
       prioridad: this.editPriority.value,
       categoria: this.editCategory.value,
-      fechaLimite: this.editDate.value || null,
+      fechaLimite,
     });
     this._cerrarModal();
     this.render();
+    this._advertirFechaPasada(fechaLimite);
   }
 
   // ---- Validación ----
@@ -515,11 +650,7 @@ class UI {
   }
 
   _obtenerTareasVisibles() {
-    let tareas = this.gestor.filtrar(this.filtroEstado, this.categoriaFiltro);
-    if (this.busqueda.trim()) {
-      const q = this.busqueda.trim().toLowerCase();
-      tareas = tareas.filter((t) => t.titulo.toLowerCase().includes(q));
-    }
+    const tareas = this.gestor.filtrar(this.filtroEstado, this.categoriaFiltro, this.busqueda);
     return this.gestor.ordenar(tareas, this.criterioOrden);
   }
 
@@ -568,11 +699,14 @@ class UI {
       : '';
 
     const etiquetaCat = tarea.categoria.charAt(0).toUpperCase() + tarea.categoria.slice(1);
+    const accionCheckbox = completada ? 'Marcar como pendiente' : 'Marcar como completada';
 
     return `
       <li class="task-item p-${tarea.prioridad} ${completada ? 'completed' : ''} ${vencida ? 'overdue' : ''}"
-          data-id="${tarea.id}">
-        <input type="checkbox" class="checkbox" ${completada ? 'checked' : ''} aria-label="Completar tarea">
+          data-id="${tarea.id}" tabindex="0"
+          aria-label="${this._escaparAtributo(tarea.titulo)}. Usa Alt+flechas para reordenar.">
+        <input type="checkbox" class="checkbox" ${completada ? 'checked' : ''}
+               aria-label="${accionCheckbox}: ${this._escaparAtributo(tarea.titulo)}">
         <div class="task-body">
           <div class="task-text">${this._escapar(tarea.titulo)}${urgente}</div>
           <div class="task-meta">
@@ -586,8 +720,8 @@ class UI {
           </div>
         </div>
         <div class="task-actions">
-          <button class="task-icon-btn edit" aria-label="Editar tarea">✏️</button>
-          <button class="task-icon-btn delete" aria-label="Eliminar tarea">×</button>
+          <button class="task-icon-btn edit" aria-label="Editar ${this._escaparAtributo(tarea.titulo)}">✏️</button>
+          <button class="task-icon-btn delete" aria-label="Eliminar ${this._escaparAtributo(tarea.titulo)}">×</button>
         </div>
       </li>
     `;
@@ -597,6 +731,11 @@ class UI {
     const div = document.createElement('div');
     div.textContent = texto;
     return div.innerHTML;
+  }
+
+  // Escapa también las comillas para poder usar el texto dentro de atributos.
+  _escaparAtributo(texto) {
+    return this._escapar(String(texto)).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   _bindTareaEventos(tareas) {
@@ -618,15 +757,184 @@ class UI {
 
         editBtn.addEventListener('click', () => this._abrirModalEdicion(tarea));
 
+        // Reordena con el teclado (Alt + flechas) cuando el orden es manual.
+        item.addEventListener('keydown', (e) => {
+          if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+          e.preventDefault();
+          this._moverConTeclado(id, e.key === 'ArrowUp' ? -1 : 1);
+        });
+
         deleteBtn.addEventListener('click', () => {
+          const indice = this.gestor.tareas.findIndex((t) => t.id === id);
+          const eliminada = this.gestor.tareas[indice];
           item.classList.add('removing');
           setTimeout(() => {
             this.gestor.eliminar(id);
             this.render();
+            this._mostrarToast(`"${eliminada.titulo}" eliminada`, {
+              texto: 'Deshacer',
+              onClick: () => {
+                this.gestor.insertarEn(indice, eliminada);
+                this.render();
+                this._ocultarToast();
+              },
+            });
           }, 250);
         });
       }
     });
+  }
+
+  // Mueve una tarea una posición arriba/abajo en el orden manual.
+  _moverConTeclado(id, delta) {
+    const ids = this.gestor.tareas.map((t) => t.id);
+    const i = ids.indexOf(id);
+    const j = i + delta;
+    if (i === -1 || j < 0 || j >= ids.length) return;
+
+    [ids[i], ids[j]] = [ids[j], ids[i]];
+    this.gestor.reordenar(ids);
+    this.criterioOrden = 'manual';
+    this.sortOptions.value = 'manual';
+    this.render();
+
+    const movida = this.taskList.querySelector(`.task-item[data-id="${id}"]`);
+    if (movida) movida.focus();
+  }
+
+  // ---- Toast (avisos + deshacer) ----
+  _mostrarToast(mensaje, accion = null) {
+    this.toastMsg.textContent = mensaje;
+    if (accion && accion.texto && typeof accion.onClick === 'function') {
+      this.toastAction.textContent = accion.texto;
+      this.toastAction.hidden = false;
+      this._toastAccion = accion.onClick;
+    } else {
+      this.toastAction.hidden = true;
+      this._toastAccion = null;
+    }
+    this.toast.hidden = false;
+    requestAnimationFrame(() => this.toast.classList.add('is-visible'));
+
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => this._ocultarToast(), 5000);
+  }
+
+  _ocultarToast() {
+    clearTimeout(this._toastTimer);
+    this.toast.classList.remove('is-visible');
+    this._toastAccion = null;
+    this._toastTimer = setTimeout(() => {
+      this.toast.hidden = true;
+    }, 250);
+  }
+
+  // ---- Exportar / Importar ----
+  _exportarJSON() {
+    const datos = this.gestor.tareas.map((t) => t.toJSON());
+    const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const fecha = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `mepool-tareas-${fecha}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    this._mostrarToast(`${datos.length} tarea(s) exportada(s).`);
+  }
+
+  _importarJSON(e) {
+    const archivo = e.target.files && e.target.files[0];
+    e.target.value = ''; // permite volver a elegir el mismo archivo
+    if (!archivo) return;
+
+    const lector = new FileReader();
+    lector.onload = () => {
+      try {
+        const datos = JSON.parse(lector.result);
+        if (!Array.isArray(datos)) throw new Error('formato');
+        const importadas = datos
+          .filter((d) => d && typeof d.titulo === 'string' && d.titulo.trim())
+          .map((d) => Tarea.desdeJSON(d));
+        if (!importadas.length) throw new Error('vacío');
+
+        const reemplazar =
+          this.gestor.tareas.length === 0 ||
+          confirm(`Se importarán ${importadas.length} tarea(s) y se reemplazarán las actuales. ¿Continuar?`);
+        if (!reemplazar) return;
+
+        this.gestor.tareas = importadas;
+        this.gestor.limpiarIdsDuplicados();
+        this.gestor.guardar();
+        this.render();
+        this._mostrarToast(`${importadas.length} tarea(s) importada(s).`);
+      } catch (err) {
+        this._mostrarToast('El archivo no es un JSON de tareas válido.');
+      }
+    };
+    lector.readAsText(archivo);
+  }
+
+  // ---- Limpiar completadas ----
+  _limpiarCompletadas() {
+    const removidas = this.gestor.eliminarCompletadas();
+    if (!removidas.length) {
+      this._mostrarToast('No hay tareas completadas para limpiar.');
+      return;
+    }
+    this.render();
+    this._mostrarToast(`${removidas.length} tarea(s) completada(s) eliminada(s).`, {
+      texto: 'Deshacer',
+      onClick: () => {
+        this.gestor.restaurarEnBloque(removidas);
+        this.render();
+        this._ocultarToast();
+      },
+    });
+  }
+
+  // ---- Recordatorios (Notification API) ----
+  _activarRecordatorios() {
+    if (typeof Notification === 'undefined') {
+      this._mostrarToast('Tu navegador no soporta notificaciones.');
+      return;
+    }
+    const notificar = () => {
+      const vencidas = this.gestor.obtenerVencidas();
+      if (!vencidas.length) {
+        this._mostrarToast('No tienes tareas vencidas. Todo en orden.');
+        return;
+      }
+      const cuerpo = vencidas
+        .slice(0, 5)
+        .map((t) => `• ${t.titulo} (vencida hace ${t.diasDeAtraso()} día(s))`)
+        .join('\n');
+      new Notification('MEPOOL · Tareas vencidas', {
+        body: `${vencidas.length} tarea(s) vencida(s):\n${cuerpo}`,
+      });
+      this._mostrarToast(`Recordatorio enviado: ${vencidas.length} tarea(s) vencida(s).`);
+    };
+
+    if (Notification.permission === 'granted') notificar();
+    else if (Notification.permission === 'denied') {
+      this._mostrarToast('Las notificaciones están bloqueadas en el navegador.');
+    } else {
+      Notification.requestPermission().then((permiso) => {
+        if (permiso === 'granted') notificar();
+        else this._mostrarToast('No se activaron los recordatorios.');
+      });
+    }
+  }
+
+  // ---- Aviso de fecha límite ya pasada (no bloquea) ----
+  _advertirFechaPasada(fechaLimite) {
+    if (!fechaLimite) return;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const limite = new Date(fechaLimite + 'T00:00:00');
+    if (limite < hoy) this._mostrarToast('Atención: la fecha límite ya pasó.');
   }
 
   // ---- Arrastrar y soltar (mouse + táctil) ----
@@ -831,11 +1139,32 @@ function iniciarBienvenida() {
   const screen = document.getElementById('welcome-screen');
   if (!screen) return;
 
+  const CLAVE = 'mepool-welcome-visto';
+  let yaVista = false;
+  try {
+    yaVista = sessionStorage.getItem(CLAVE) === '1';
+  } catch (e) {
+    yaVista = false;
+  }
+
+  // La intro se muestra una sola vez por sesión.
+  if (yaVista) {
+    screen.remove();
+    return;
+  }
+  try {
+    sessionStorage.setItem(CLAVE, '1');
+  } catch (e) {
+    /* almacenamiento no disponible: se muestra igual */
+  }
+
   let terminada = false;
 
   const ocultar = () => {
     if (terminada) return;
     terminada = true;
+    screen.removeEventListener('click', ocultar);
+    window.removeEventListener('keydown', ocultar);
     screen.classList.add('is-revealing');
     // pausa para que el flash pegue su pico y luego desvanecer la bienvenida
     requestAnimationFrame(() => {
@@ -851,8 +1180,18 @@ function iniciarBienvenida() {
     });
   };
 
-  // Disparador determinista: el flash y la transición salen siempre igual,
-  // en PC y móvil, sin depender de prefers-reduced-motion.
-  setTimeout(ocultar, 5200);
+  // Se puede saltar con clic o con cualquier tecla.
+  screen.addEventListener('click', ocultar);
+  window.addEventListener('keydown', ocultar);
+
+  setTimeout(ocultar, 3200);
+}
+
+// ============================================================
+// Exportación para pruebas (Node/Vitest). En el navegador `module`
+// no existe, así que esta rama se ignora.
+// ============================================================
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { Tarea, TareaUrgente, GestorTareas, PRIORIDADES, STORAGE_KEY, THEME_KEY };
 }
 

@@ -135,10 +135,10 @@
 
         <div class="toolbar-row">
           <div class="filters" role="group" aria-label="Filtrar por estado">
-            <button class="filter-btn active" data-filter="todas">Todas</button>
-            <button class="filter-btn" data-filter="pendientes">Pendientes</button>
-            <button class="filter-btn" data-filter="completadas">Completadas</button>
-            <button class="filter-btn" data-filter="vencidas">Vencidas</button>
+            <button type="button" class="filter-btn active" data-filter="todas" aria-pressed="true">Todas</button>
+            <button type="button" class="filter-btn" data-filter="pendientes" aria-pressed="false">Pendientes</button>
+            <button type="button" class="filter-btn" data-filter="completadas" aria-pressed="false">Completadas</button>
+            <button type="button" class="filter-btn" data-filter="vencidas" aria-pressed="false">Vencidas</button>
           </div>
         </div>
 
@@ -166,6 +166,14 @@
             </select>
           </div>
         </div>
+
+        <div class="toolbar-row actions-row">
+          <button type="button" class="btn btn-ghost btn-sm" id="clearCompletedBtn">Limpiar completadas</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">Exportar JSON</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="importBtn">Importar JSON</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="remindersBtn">Activar recordatorios</button>
+          <input type="file" id="importFile" accept="application/json,.json" hidden>
+        </div>
       </div>
 
       <ul class="task-list" id="taskList" aria-live="polite"></ul>
@@ -188,6 +196,12 @@
   <footer class="app-footer">
     <p>Hecho con JavaScript puro y POO · HTML, CSS y JS</p>
   </footer>
+
+  <!-- Avisos (toast) -->
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden>
+    <span class="toast-msg" id="toastMsg"></span>
+    <button type="button" class="toast-action" id="toastAction" hidden></button>
+  </div>
 
   <!-- Modal de edición -->
   <div class="modal-overlay" id="editModal" hidden>

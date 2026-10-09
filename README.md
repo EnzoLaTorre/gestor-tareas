@@ -15,12 +15,17 @@ Aplicación web de gestión de tareas construida con **JavaScript puro** aplican
 - **Filtros por categoría**: Trabajo · Estudio · Personal · Otros.
 - **Ordenamiento**: fecha límite, prioridad, nombre (A-Z / Z-A), fecha de creación.
 - **Arrastrar y soltar** para reordenar tareas manualmente (mouse y táctil) con orden persistido.
+- **Reordenar con el teclado** (`Alt` + `↑/↓`).
+- **Deshacer al eliminar** tareas y al limpiar completadas (toast de aviso).
+- **Exportar / importar** todas las tareas en JSON.
+- **Recordatorios** de tareas vencidas con la Notification API.
+- **Aviso** cuando la fecha límite elegida ya pasó.
 - **Estadísticas** dinámicas (total, pendientes, completadas, vencidas, prioridad alta).
 - **Barra de progreso** calculada `(completadas / total) * 100`.
 - **Persistencia** en `localStorage` con reconstrucción correcta de instancias.
 - **Modo oscuro / claro** (el tema se guarda en `localStorage`).
 - **Diseño responsive** (escritorio, tablet, celular).
-- **Accesibilidad**: labels conectados, `aria-label`, focus visible, navegación por teclado.
+- **Accesibilidad**: labels conectados, `aria-label`, `aria-pressed` en filtros, focus trap en el modal y navegación por teclado.
 - **Estados vacíos** agradables cuando no hay tareas o resultados.
 
 ## Programación Orientada a Objetos
@@ -84,7 +89,11 @@ cargar()    // JSON.parse + reconstrucción de instancias
 gestor-tareas/
 ├── index.html      # Estructura de la aplicación (formulario, lista, estadísticas, modal)
 ├── style.css       # Estilos, temas oscuro/claro, animaciones, responsive
-├── script.js       # Lógica POO (Tarea, GestorTareas, UI)
+├── script.js       # Lógica POO (Tarea, TareaUrgente, GestorTareas, UI)
+├── tests/          # Pruebas unitarias de la capa de dominio (Vitest)
+├── package.json    # Scripts y dependencias de desarrollo
+├── eslint.config.js
+├── vitest.config.mjs
 ├── README.md       # Documentación del proyecto
 └── img/            # Imágenes del proyecto
     ├── MODOCLARO.jpg
@@ -111,9 +120,19 @@ También puedes ver la versión en vivo en **GitHub Pages**:
 - [Portafolio](https://enzolatorre.github.io/Portfolio/)
 - [GitHub](https://github.com/EnzoLaTorre)
 
+## Desarrollo
+
+El proyecto incluye herramientas de calidad (solo para desarrollo, la app no las necesita para funcionar):
+
+```bash
+npm install      # instala dependencias de desarrollo
+npm test         # ejecuta las pruebas (Vitest + jsdom)
+npm run lint     # revisa el código con ESLint
+npm run format   # formatea con Prettier
+```
+
 ## Posibles mejoras futuras
 
-- Exportar / importar tareas en JSON.
-- Recordatorios y notificaciones de tareas vencidas.
 - Etiquetas personalizadas más allá de las categorías fijas.
+- Subtareas dentro de cada tarea.
 - Sincronización con una API/backend (opcional).
