@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import modulo from '../script.js';
-
-const { Tarea, TareaUrgente, GestorTareas, STORAGE_KEY } = modulo;
+import { Tarea, TareaUrgente } from '../js/Tarea.js';
+import { GestorTareas } from '../js/GestorTareas.js';
+import { STORAGE_KEY } from '../js/config.js';
 
 // Fecha ISO 'YYYY-MM-DD' relativa a hoy (negativo = pasado).
 const fechaRelativa = (dias) => {

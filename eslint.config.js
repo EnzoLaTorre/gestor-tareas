@@ -17,7 +17,7 @@ module.exports = [
     },
   },
   {
-    files: ['tests/**/*.js'],
+    files: ['tests/**/*.js', 'js/**/*.js'],
     languageOptions: { sourceType: 'module' },
   },
 ];

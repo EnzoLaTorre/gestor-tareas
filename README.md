@@ -41,7 +41,7 @@ Aplicación web de gestión de tareas construida con **JavaScript puro** aplican
 
 ```javascript
 {
-  id,             // UUID único (crypto.randomUUID con fallback para file://)
+  id,             // UUID único (crypto.randomUUID con fallback para contextos no seguros)
   titulo,         // string
   prioridad,      // 'alta' | 'media' | 'baja'
   categoria,      // 'trabajo' | 'estudio' | 'personal' | 'otros'
@@ -89,24 +89,37 @@ cargar()    // JSON.parse + reconstrucción de instancias
 gestor-tareas/
 ├── index.html      # Estructura de la aplicación (formulario, lista, estadísticas, modal)
 ├── style.css       # Estilos, temas oscuro/claro, animaciones, responsive
-├── script.js       # Lógica POO (Tarea, TareaUrgente, GestorTareas, UI)
+├── js/             # Lógica en módulos ES (POO)
+│   ├── config.js        # Claves de storage, prioridades y utilidades
+│   ├── Tarea.js         # Tarea (base) y TareaUrgente (herencia)
+│   ├── GestorTareas.js  # Dominio: CRUD, filtros, orden, persistencia
+│   ├── UI.js            # DOM, eventos, render, drag & drop, tema
+│   ├── welcome.js       # Pantalla de bienvenida
+│   └── main.js          # Punto de entrada
 ├── tests/          # Pruebas unitarias de la capa de dominio (Vitest)
 ├── package.json    # Scripts y dependencias de desarrollo
 ├── eslint.config.js
 ├── vitest.config.mjs
 ├── README.md       # Documentación del proyecto
 └── img/            # Imágenes del proyecto
-    ├── MODOCLARO.jpg
-    ├── MODOOSCURO.jpg
     ├── logo-mepool.png
-    ├── favicon.png
-    └── LOGO.png
+    └── favicon.png
 ```
 
 ## Cómo ejecutar
 
-1. Clona o descarga el repositorio.
-2. Abre `index.html` en tu navegador.
+La app usa **módulos ES**, por lo que necesita servirse por HTTP (no basta abrir
+el archivo con doble clic). Desde la carpeta del proyecto:
+
+```bash
+# con Python
+python -m http.server 8000
+
+# o con Node
+npx serve .
+```
+
+Luego abre `http://localhost:8000` en tu navegador.
 
 No requiere instalación, backend ni base de datos externa. Las tareas se guardan en el `localStorage` del navegador.
 
